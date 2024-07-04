@@ -8,12 +8,16 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { UsersService } from './users.service';
 
 @Controller('users') // /users
 export class UsersController {
+  // Dependency injection (DI)
+  constructor(private readonly usersService: UsersService) {}
+
   @Get() // Get/users or /users?role=value
   findAll(@Query('role') role?: 'admin' | 'user' | 'guest') {
-    return [];
+    return this.usersService.findAll(role);
   }
 
   @Get('girlfriends') // Get/users/girlfriends
@@ -23,21 +27,23 @@ export class UsersController {
 
   @Get(':id') // Get/users/:id
   findOne(@Param('id') id: string) {
-    return { id };
+    return this.usersService.findOne(+id);
   }
 
   @Post() // Post/users
-  create(@Body() createUser: {}) {
-    return createUser;
+  create(
+    @Body() createUser: { name: string; role: 'admin' | 'guest' | 'user' },
+  ) {
+    return this.usersService.create(createUser);
   }
 
   @Patch(':id') // Patch/users/:id
   update(@Param('id') id: string, @Body() updateUser: {}) {
-    return { id, ...updateUser };
+    return this.usersService.update(+id, updateUser);
   }
 
   @Delete(':id') // Delete/users/:id
   remove(@Param('id') id: string) {
-    return { id };
+    return this.usersService.remove(+id);
   }
 }
