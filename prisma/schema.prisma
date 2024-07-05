@@ -15,9 +15,9 @@ datasource db {
 
 model Employee {
   id        Int      @id @default(autoincrement())
-  name      String   
+  name      String
   email     String   @unique
-  role      Role     
+  role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
