@@ -28,7 +28,10 @@ export class EmployeesController {
   @SkipThrottle({ default: false })
   @Get()
   findAll(@Ip() ip: string, @Query('role') role?: Role) {
-    this.logger.log(`Request from ${ip} to get all employees.`);
+    this.logger.log(
+      `Request from ${ip} to get all employees.`,
+      EmployeesController.name,
+    );
     return this.employeesService.findAll(role);
   }
 
