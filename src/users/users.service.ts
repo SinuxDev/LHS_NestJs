@@ -41,51 +41,111 @@ export class UsersService {
   }
 
   async findAll(role?: 'admin' | 'user' | 'guest') {
-    if (!role) {
-      return this.databaseService.user.findMany();
-    }
+    try {
+      const validateRoles = ['admin', 'user', 'guest'];
 
-    return this.databaseService.user.findMany({
-      where: {
-        role,
-      },
-    });
+      if (role && !validateRoles.includes(role)) {
+        throw new NotFoundException("Can't Found that roles");
+      }
+
+      const whereConditionForRole = role ? { role } : {};
+
+      const userDocs = await this.databaseService.user.findMany({
+        where: whereConditionForRole,
+        select: {
+          name: true,
+          email: true,
+          role: true,
+        },
+      });
+
+      if (!userDocs) {
+        throw new NotFoundException("There's nothing I means users...");
+      }
+
+      return {
+        message: 'All Users Fetched Successfully',
+        userDocs,
+      };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async findOne(id: number) {
-    if (!id) {
-      throw new NotFoundException('User not found');
-    }
+    try {
+      const user = await this.databaseService.user.findUnique({
+        where: {
+          id,
+        },
+      });
 
-    return this.databaseService.user.findUnique({
-      where: {
-        id,
-      },
-    });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return user;
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      } else {
+        throw new InternalServerErrorException('Error finding user');
+      }
+    }
   }
 
   async update(id: number, updateUser: Prisma.UserUpdateInput) {
-    if (!id) {
-      throw new Error('User not found');
-    }
+    try {
+      // Check if the user exists
+      const existingUser = await this.databaseService.user.findUnique({
+        where: { id },
+      });
 
-    return this.databaseService.user.update({
-      where: {
-        id,
-      },
-      data: updateUser,
-    });
+      if (!existingUser) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Update the user
+      const updatedUser = await this.databaseService.user.update({
+        where: { id },
+        data: updateUser,
+      });
+
+      // Return success message along with the updated user data
+      return {
+        message: 'Update Successful',
+        user: updatedUser,
+      };
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      } else {
+        throw new InternalServerErrorException('Error updating user');
+      }
+    }
   }
 
   async remove(id: number) {
-    if (!id) {
-      throw new Error('User not found');
-    }
+    try {
+      const existingUser = await this.databaseService.user.findUnique({
+        where: { id },
+      });
 
-    return this.databaseService.user.delete({
-      where: {
-        id,
-      },
-    });
+      if (!existingUser) {
+        throw new NotFoundException('User Not Found');
+      }
+
+      return this.databaseService.user.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      } else {
+        throw new InternalServerErrorException('Error removing user');
+      }
+    }
   }
 }
